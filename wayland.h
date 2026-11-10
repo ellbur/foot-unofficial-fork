@@ -523,11 +523,17 @@ struct wayland {
     bool shm_have_argb2101010:1;
     bool shm_have_abgr2101010:1;
     bool shm_have_abgr161616:1;
+
+    /* Compositor is ChromeOS' sommelier (Crostini) */
+    bool is_crostini;
+
+    /* Treat a depressed NumLock as locked (resolved [tweak].numlock-as-locked) */
+    bool numlock_as_locked;
 };
 
 struct wayland *wayl_init(
     struct fdm *fdm, struct key_binding_manager *key_binding_manager,
-    bool presentation_timings);
+    bool presentation_timings, int numlock_as_locked);
 void wayl_destroy(struct wayland *wayl);
 
 bool wayl_reload_xcursor_theme(struct seat *seat, float new_scale);

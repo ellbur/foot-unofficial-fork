@@ -1272,6 +1272,14 @@ handle_global(void *data, struct wl_registry *registry,
     LOG_DBG("global: 0x%08x, interface=%s, version=%u", name, interface, version);
     struct wayland *wayl = data;
 
+    /*
+     * Not bound; only used to identify ChromeOS' sommelier (Crostini),
+     * which reports NumLock as depressed (see
+     * [tweak].numlock-as-locked).
+     */
+    if (streq(interface, "zcr_text_input_crostini_manager_v1"))
+        wayl->is_crostini = true;
+
     if (streq(interface, wl_compositor_interface.name)) {
         const uint32_t required = 4;
         if (!verify_iface_version(interface, version, required))
@@ -1802,7 +1810,7 @@ fdm_wayl(struct fdm *fdm, int fd, int events, void *data)
 
 struct wayland *
 wayl_init(struct fdm *fdm, struct key_binding_manager *key_binding_manager,
-          bool presentation_timings)
+          bool presentation_timings, int numlock_as_locked)
 {
     struct wayland *wayl = calloc(1, sizeof(*wayl));
     if (unlikely(wayl == NULL)) {
@@ -1864,6 +1872,13 @@ wayl_init(struct fdm *fdm, struct key_binding_manager *key_binding_manager,
         LOG_ERR("no monitors available");
         goto out;
     }
+
+    wayl->numlock_as_locked =
+        numlock_as_locked == NUMLOCK_AS_LOCKED_YES ||
+        (numlock_as_locked == NUMLOCK_AS_LOCKED_AUTO && wayl->is_crostini);
+
+    if (wayl->numlock_as_locked)
+        LOG_INFO("treating NumLock as a locked modifier");
 
     if (presentation_timings && wayl->presentation == NULL) {
         LOG_ERR("compositor does not implement the presentation time interface");

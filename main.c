@@ -640,7 +640,8 @@ main(int argc, char *const *argv)
         goto out;
 
     if ((wayl = wayl_init(
-             fdm, key_binding_manager, conf.presentation_timings)) == NULL)
+             fdm, key_binding_manager, conf.presentation_timings,
+             conf.tweak.numlock_as_locked)) == NULL)
     {
         goto out;
     }

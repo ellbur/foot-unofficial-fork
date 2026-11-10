@@ -2177,6 +2177,32 @@ any of these options.
 	
 	Default: _yes_
 
+*numlock-as-locked*
+	Treat NumLock as a *locked* modifier, even when the compositor
+	reports it as *depressed* (i.e. as if the NumLock key was being
+	held down). One of *auto*, *yes* or *no*.
+	
+	Foot ignores locked modifiers when matching key and mouse
+	bindings. Some compositors, notably ChromeOS' sommelier (Linux
+	apps on ChromeOS, a.k.a. Crostini), report NumLock as depressed
+	for as long as it is on. Foot then sees NumLock as part of every
+	key and mouse combination, and no bindings match; for example,
+	*Control+Shift+n* is seen as *Control+Shift+Mod2+n*, and scrolling
+	the scrollback with the mouse wheel stops working.
+	
+	When enabled, a depressed NumLock is instead treated as locked:
+	bindings match regardless of NumLock, while the keypad still
+	behaves according to the NumLock state. The downside is that
+	bindings using NumLock (*Mod2*) as a modifier no longer match.
+	
+	*auto* enables this when foot detects that the compositor is
+	sommelier, and disables it otherwise.
+	
+	In server mode, the value from the server's configuration is
+	used.
+	
+	Default: _auto_
+
 # SEE ALSO
 
 *foot*(1), *footclient*(1)

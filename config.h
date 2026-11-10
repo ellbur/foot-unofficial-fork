@@ -460,6 +460,11 @@ struct config {
         enum shm_bit_depth surface_bit_depth;
         uint32_t min_stride_alignment;
         bool preapply_damage;
+        enum {
+            NUMLOCK_AS_LOCKED_AUTO,
+            NUMLOCK_AS_LOCKED_YES,
+            NUMLOCK_AS_LOCKED_NO,
+        } numlock_as_locked;
     } tweak;
 
     struct {

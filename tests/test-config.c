@@ -1478,6 +1478,15 @@ test_section_tweak(void)
                  RENDER_TIMER_BOTH},
         (int *)&conf.tweak.render_timer);
 
+    test_enum(
+        &ctx, &parse_section_tweak, "numlock-as-locked",
+        3,
+        (const char *[]){"auto", "yes", "no"},
+        (int []){NUMLOCK_AS_LOCKED_AUTO,
+                 NUMLOCK_AS_LOCKED_YES,
+                 NUMLOCK_AS_LOCKED_NO},
+        (int *)&conf.tweak.numlock_as_locked);
+
     test_float(&ctx, &parse_section_tweak, "box-drawing-base-thickness",
                 &conf.tweak.box_drawing_base_thickness);
     test_boolean(&ctx, &parse_section_tweak, "box-drawing-solid-shades",

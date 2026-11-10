@@ -3003,6 +3003,15 @@ parse_section_tweak(struct context *ctx)
     else if (streq(key, "pre-apply-damage"))
         return value_to_bool(ctx, &conf->tweak.preapply_damage);
 
+    else if (streq(key, "numlock-as-locked")) {
+        _Static_assert(sizeof(conf->tweak.numlock_as_locked) == sizeof(int),
+                       "enum is not 32-bit");
+        return value_to_enum(
+            ctx,
+            (const char *[]){"auto", "yes", "no", NULL},
+            (int *)&conf->tweak.numlock_as_locked);
+    }
+
     else {
         LOG_CONTEXTUAL_ERR("not a valid option: %s", key);
         return false;
@@ -3661,6 +3670,7 @@ config_load(struct config *conf, const char *conf_path,
             .surface_bit_depth = SHM_BITS_AUTO,
             .min_stride_alignment = 256,
             .preapply_damage = true,
+            .numlock_as_locked = NUMLOCK_AS_LOCKED_AUTO,
         },
 
         .touch = {

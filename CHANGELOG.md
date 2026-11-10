@@ -73,6 +73,13 @@
 
 ## Unreleased
 ### Added
+
+* `tweak.numlock-as-locked=auto|yes|no`: treat NumLock as a locked
+  modifier even when the compositor reports it as depressed. Enabled
+  automatically on ChromeOS (sommelier/Crostini), where a NumLock
+  reported as depressed otherwise prevents all key and mouse bindings
+  from matching (e.g. `Control+Shift+n`, mouse wheel scrollback).
+
 ### Changed
 
 * Cells with a non-default background colors, but otherwise empty, are

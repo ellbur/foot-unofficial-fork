@@ -1868,6 +1868,34 @@ keyboard_modifiers(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial,
     mods_latched &= ~seat->kbd.virtual_modifiers;
     mods_locked &= ~seat->kbd.virtual_modifiers;
 
+    /*
+     * Some compositors report NumLock as *depressed* rather than
+     * *locked*. ChromeOS' sommelier (Crostini) does this: every
+     * modifiers event has Mod2 set in mods_depressed, and
+     * mods_locked == 0.
+     *
+     * We filter out locked modifiers when matching key and mouse
+     * bindings, but not depressed ones. With a "depressed" NumLock,
+     * every binding fails to match (e.g. Control+Shift+n is seen as
+     * Control+Shift+Mod2+n, and the plain mouse wheel as
+     * Mod2+BTN_WHEEL_BACK, breaking scrollback scrolling).
+     *
+     * When enabled ([tweak].numlock-as-locked, on by default on
+     * Crostini), move NumLock from depressed to locked. Effective
+     * modifiers (used for keysym translation, e.g. the keypad) are
+     * unaffected.
+     */
+    if (seat->wayl->numlock_as_locked &&
+        seat->kbd.xkb_keymap != NULL &&
+        seat->kbd.mod_num != XKB_MOD_INVALID)
+    {
+        const xkb_mod_mask_t num = 1u << seat->kbd.mod_num;
+        if (mods_depressed & num) {
+            mods_depressed &= ~num;
+            mods_locked |= num;
+        }
+    }
+
 #if defined(_DEBUG)
     char depressed[256];
     char latched[256];
@@ -2027,6 +2055,33 @@ UNITTEST
             xassert(streq(escape, expected_alt_shift_2));
 
             key_press_release(&seat, &term, 1337, KEY_2 + 8, WL_KEYBOARD_KEY_STATE_RELEASED);
+        }
+
+        /* [tweak].numlock-as-locked: depressed NumLock (as sent by sommelier) */
+        if (seat.kbd.mod_num != XKB_MOD_INVALID) {
+            const xkb_mod_mask_t num = 1u << seat.kbd.mod_num;
+            const xkb_mod_mask_t ctrl = 1u << seat.kbd.mod_ctrl;
+
+            /* Disabled: passed through as-is */
+            wayl.numlock_as_locked = false;
+            keyboard_modifiers(&seat, NULL, 1337, ctrl | num, 0, 0, 0);
+            xassert(xkb_state_serialize_mods(
+                        seat.kbd.xkb_state, XKB_STATE_MODS_DEPRESSED) == (ctrl | num));
+            xassert(xkb_state_serialize_mods(
+                        seat.kbd.xkb_state, XKB_STATE_MODS_LOCKED) == 0);
+
+            /* Enabled: moved to locked, still effective */
+            wayl.numlock_as_locked = true;
+            keyboard_modifiers(&seat, NULL, 1337, ctrl | num, 0, 0, 0);
+            xassert(xkb_state_serialize_mods(
+                        seat.kbd.xkb_state, XKB_STATE_MODS_DEPRESSED) == ctrl);
+            xassert(xkb_state_serialize_mods(
+                        seat.kbd.xkb_state, XKB_STATE_MODS_LOCKED) == num);
+            xassert(xkb_state_serialize_mods(
+                        seat.kbd.xkb_state, XKB_STATE_MODS_EFFECTIVE) == (ctrl | num));
+
+            wayl.numlock_as_locked = false;
+            keyboard_modifiers(&seat, NULL, 1337, 0, 0, 0, 0);
         }
 
         {
